@@ -1,0 +1,124 @@
+# Figure 4 parameter study from arXiv:2605.26271.
+#
+# Uses the shared joint-learning parameters reported by the paper and fixes
+# noise_std=0.1 while sweeping the alpha values visible in Figure 4. As in the
+# companion noise config, the generating link follows the archived random
+# monotone polynomial fitted into a Gaussian RKHS. The current named random
+# streams are deterministic but intentionally do not emulate legacy RNG state.
+# Expected workload: a long research run.
+schema_version: 2
+experiment: figure_04_joint_regularization
+
+algorithm:
+  name: bcd
+  params:
+    regularization:
+      lambda_: 0.5
+      mu: 1.0
+      alpha: 1.0e-3
+    z_optimizer:
+      name: gradient_descent
+      params:
+        learning_rate: 1.0e-5
+    phi_update:
+      learning_rate: 1.0e-4
+    project_z: false
+    freeze_phi_updates: false
+
+trials: 1
+seed: 2026
+
+data:
+  source: synthetic
+  type: standard_normal
+  desirable: false
+  noise_std: 0.1
+  generating_link:
+    name: random_monotone_rkhs
+    params:
+      degree: 4
+      sigma: 1.0
+      fit_ridge: 1.0e-6
+  evaluation_domain:
+    central_mass: 0.95
+    grid_count: 1000
+  bounds:
+    lower: -3.0
+    upper: 3.0
+  shape:
+    n_rows: 100
+    n_cols: 100
+    rank: 3
+    n_observations: 5000
+
+link:
+  kind: piecewise_linear_rkhs
+  sigma: 1.0
+  params:
+    grid:
+      count: 1000
+      bounds:
+        name: fixed
+        params:
+          lower: -3.0
+          upper: 3.0
+      rebuild:
+        name: never
+        params: {}
+
+objective:
+  name: squared_error
+  params: {}
+
+initialization:
+  mode: separate
+  z:
+    name: svd
+    params: {}
+  phi:
+    name: zero
+    params: {}
+
+runtime:
+  max_iter: 20000
+  tol: 0.0
+  dtype: float64
+  diagnostics_interval: 200
+  save_checkpoints: false
+  checkpoint_iters: []
+
+diagnostics:
+  on_error: raise
+  families:
+    objective: [loss]
+    timing: [elapsed]
+    reconstruction: [rmse]
+    truth_matrix: [x_error, phi_x_error]
+    truth_z: [goodness]
+    phi: [phi_diff]
+    phi_sharp: [regret, phi_sharp_diff, phi_sharp_diff_star, lyapunov]
+
+sweep:
+  axes:
+    - path: algorithm.params.regularization.alpha
+      values: [1.0e-4, 1.0e-3, 1.0e-2, 1.0e-1, 1.0, 10.0, 100.0, 1000.0, 10000.0]
+
+plot:
+  enabled: true
+  dir: ../../plots/figure_04_joint_regularization
+  name: figure_04_joint_regularization
+  legend_key: algorithm.params.regularization.alpha
+  legend_title: "alpha"
+  max_plots_per_row: 3
+  show_legend: true
+  plot1:
+    type: summary_line
+    x: algorithm.params.regularization.alpha
+    y: goodness
+    summary_stat: min
+    x_scale: log
+    y_scale: log
+    title: "Minimum factor error by regularization"
+    xlabel: alpha
+    ylabel: Minimum Procrustes error
+    pdf: figure_04_joint_regularization

@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+.env
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Local/editor files
+.DS_Store
+.idea/
+.vscode/
+
+# Local profiling and exploratory scripts
+scripts/
+
+# Generated experiment artifacts
+results/
+plots/
+*.prof
+*.log
+
+# Data/cache artifacts
+/data/
+/data-raw/
+
+.mplconfig/

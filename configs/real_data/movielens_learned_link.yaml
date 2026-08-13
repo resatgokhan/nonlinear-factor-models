@@ -1,0 +1,127 @@
+# Full MovieLens latest-small learned-link run corresponding to the nonlinear
+# monotone method in the empirical study. Prepare the exact 2018 release with:
+#   bcd-lab preprocess movielens-latest-small
+# Parameters follow the archived gradient-descent run; validation RMSE selects
+# one coherent checkpoint for metrics and the learned-link plot.
+# Expected workload: a long real-data run.
+schema_version: 2
+experiment: movielens_learned_link
+
+algorithm:
+  name: bcd
+  params:
+    regularization:
+      lambda_: 0.0
+      mu: 0.5
+      alpha: 1.0e-3
+    z_optimizer:
+      name: gradient_descent
+      params:
+        learning_rate: 8.0e-6
+    phi_update:
+      learning_rate: 2.0e-6
+    project_z: true
+    freeze_phi_updates: false
+
+trials: 1
+seed: 0
+
+data:
+  source: csv
+  path: ../../data/movielens-latest-small.csv
+  row_col: row
+  col_col: col
+  value_col: value
+  has_header: true
+  remap_ids: true
+  shape:
+    rank: 7
+  split:
+    validation_fraction: 0.1
+    stratify_by: row
+
+link:
+  kind: piecewise_linear_rkhs
+  sigma: 1.0
+  params:
+    grid:
+      count: 40
+      bounds:
+        name: input_quantiles
+        params:
+          lower_quantile: 0.01
+          upper_quantile: 0.99
+          pad_fraction: 0.25
+          min_padding: 0.5
+      rebuild:
+        name: never
+        params: {}
+    monotone_phi_enabled: true
+    monotone_phi_direction: increasing
+    phi_output_clamp_enabled: true
+    phi_output_clamp_min: 0.5
+    phi_output_clamp_max: 5.0
+
+objective:
+  name: squared_error
+  params: {}
+
+initialization:
+  mode: separate
+  z:
+    name: svd
+    params: {}
+  phi:
+    name: zero
+    params: {}
+
+runtime:
+  max_iter: 1600
+  tol: 0.0
+  dtype: float64
+  diagnostics_interval: 25
+  save_checkpoints: false
+  checkpoint_iters: []
+
+diagnostics:
+  on_error: raise
+  families:
+    objective: [loss]
+    timing: [elapsed]
+    gradients: [z_grad_norm, z_optimizer_update_norm, phi_grad_norm]
+    reconstruction: [rmse, mae]
+
+selection:
+  metric: validation_rmse
+  mode: min
+  retain_checkpoint: true
+
+plot:
+  enabled: true
+  dir: ../../plots/movielens_learned_link
+  name: movielens_learned_link
+  max_plots_per_row: 2
+  show_legend: false
+  plot1:
+    type: line
+    x: iteration
+    y: validation_rmse
+    title: "Validation reconstruction"
+    xlabel: Iteration
+    ylabel: Validation RMSE
+    pdf: movielens_learned_link
+  plot2:
+    type: line
+    x: iteration
+    y: train_rmse
+    title: "Training reconstruction"
+    xlabel: Iteration
+    ylabel: Train RMSE
+    pdf: movielens_learned_link
+  plot3:
+    type: selected_link
+    show_identity: true
+    title: "Validation-selected link"
+    xlabel: Latent inner product
+    ylabel: Predicted rating
+    pdf: movielens_learned_link

@@ -1,0 +1,12 @@
+z_optimizer:
+  name: gradient_descent
+  params:
+    learning_rate: 0.1
+phi_update:
+  learning_rate: 0.001
+regularization:
+  alpha: 0.01
+  lambda_: 0.01
+  mu: 1.0
+project_z: true
+freeze_phi_updates: false

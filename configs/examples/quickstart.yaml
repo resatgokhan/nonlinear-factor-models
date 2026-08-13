@@ -1,0 +1,110 @@
+# Small deterministic matrix-completion example for a first successful run.
+# Expected workload: seconds on a laptop.
+schema_version: 2
+experiment: quickstart
+
+algorithm:
+  name: bcd
+  params:
+    regularization:
+      lambda_: 0.0
+      mu: 1.0
+      alpha: 0.0
+    z_optimizer:
+      name: gradient_descent
+      params:
+        learning_rate: 0.005
+    phi_update:
+      learning_rate: 0.0
+    project_z: false
+
+trials: 1
+seed: 7
+
+data:
+  source: synthetic
+  type: standard_normal
+  desirable: true
+  condition_number: 2.0
+  noise_std: 0.01
+  generating_link:
+    name: identity
+    params: {}
+  bounds:
+    lower: -3.0
+    upper: 3.0
+  shape:
+    n_rows: 30
+    n_cols: 30
+    rank: 2
+    n_observations: 300
+
+link:
+  kind: identity
+  sigma: 1.0
+  params: {}
+
+objective:
+  name: squared_error
+  params: {}
+
+initialization:
+  mode: separate
+  z:
+    name: svd
+    params: {}
+  phi:
+    name: none
+    params: {}
+
+runtime:
+  max_iter: 50
+  tol: 1.0e-8
+  dtype: float64
+  diagnostics_interval: 5
+  save_checkpoints: false
+  checkpoint_iters: []
+
+diagnostics:
+  on_error: raise
+  families:
+    objective: [loss]
+    timing: [elapsed]
+    gradients: [z_grad_norm, z_optimizer_update_norm]
+    reconstruction: [rmse]
+    truth_matrix: [x_error]
+    truth_z: [goodness]
+
+plot:
+  enabled: true
+  dir: ../../plots/quickstart
+  name: quickstart
+  max_plots_per_row: 3
+  show_legend: false
+  plot1:
+    type: line
+    x: iteration
+    y: loss
+    y_scale: log
+    title: "Objective"
+    xlabel: Iteration
+    ylabel: Loss
+    pdf: quickstart
+  plot2:
+    type: line
+    x: iteration
+    y: x_error
+    y_scale: log
+    title: "Matrix recovery"
+    xlabel: Iteration
+    ylabel: Relative Frobenius error
+    pdf: quickstart
+  plot3:
+    type: line
+    x: iteration
+    y: goodness
+    y_scale: log
+    title: "Factor recovery"
+    xlabel: Iteration
+    ylabel: Procrustes error
+    pdf: quickstart

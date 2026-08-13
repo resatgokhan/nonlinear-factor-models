@@ -1,0 +1,4 @@
+max_iter: 1000
+tol: 1.0e-6
+diagnostics_interval: 100
+save_checkpoints: false

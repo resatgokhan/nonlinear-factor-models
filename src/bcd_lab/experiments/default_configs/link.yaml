@@ -1,0 +1,8 @@
+kind: gaussian_rkhs
+sigma: 1.0
+params:
+  lower: -3.0
+  upper: 3.0
+  monotone_phi_enabled: true
+  monotone_phi_direction: increasing
+  unconstrained_ridge: 1.0e-8

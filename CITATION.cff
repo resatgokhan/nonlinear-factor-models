@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite the associated paper below.
+title: bcd-lab
+type: software
+version: 0.1.0
+authors:
+  - family-names: Gökhan
+    given-names: Resat
+    email: resat.goekhan@tum.de
+license: MIT
+preferred-citation:
+  type: article
+  title: >-
+    Learning Nonlinear Factor Models with Unknown Monotone Links from
+    Incomplete and Noisy Data
+  authors:
+    - family-names: Chao
+      given-names: Yutong
+    - family-names: Gökhan
+      given-names: Resat
+    - family-names: Etesami
+      given-names: Jalal
+    - family-names: Habibnia
+      given-names: Ali
+  year: 2026
+  journal: arXiv
+  doi: 10.48550/arXiv.2605.26271
+  url: https://arxiv.org/abs/2605.26271

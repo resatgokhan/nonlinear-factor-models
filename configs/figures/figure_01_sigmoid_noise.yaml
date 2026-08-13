@@ -1,0 +1,120 @@
+# Figure 1 from arXiv:2605.26271: factor recovery with a known sigmoid
+# link under varying Gaussian noise. The published dimensions, sample count,
+# learning rate, regularization, noise levels, and 5,000-iteration horizon are
+# explicit below. The deterministic named RNG streams differ from the archive.
+# Expected workload: a long research run.
+schema_version: 2
+experiment: figure_01_sigmoid_noise
+
+algorithm:
+  name: bcd
+  params:
+    regularization:
+      lambda_: 1.0e-3
+      mu: 1.0
+      alpha: 1.0e-3
+    z_optimizer:
+      name: gradient_descent
+      params:
+        learning_rate: 1.0e-3
+    phi_update:
+      learning_rate: 0.0
+    project_z: false
+    freeze_phi_updates: true
+
+trials: 1
+seed: 2026
+
+data:
+  source: synthetic
+  type: standard_normal
+  desirable: false
+  noise_std: 0.0
+  generating_link:
+    name: sigmoid
+    params:
+      shifted: false
+  evaluation_domain:
+    central_mass: 0.95
+    grid_count: 1000
+  bounds:
+    lower: -1.0
+    upper: 1.0
+  shape:
+    n_rows: 1000
+    n_cols: 1000
+    rank: 10
+    n_observations: 500000
+
+link:
+  kind: sigmoid
+  sigma: 1.0
+  params:
+    shifted: false
+
+objective:
+  name: squared_error
+  params: {}
+
+initialization:
+  mode: separate
+  z:
+    name: svd
+    params: {}
+  phi:
+    name: sigmoid
+    params:
+      shifted: false
+
+runtime:
+  max_iter: 5000
+  tol: 0.0
+  dtype: float64
+  diagnostics_interval: 50
+  save_checkpoints: false
+  checkpoint_iters: []
+
+diagnostics:
+  on_error: raise
+  families:
+    objective: [loss]
+    timing: [elapsed]
+    reconstruction: [rmse]
+    truth_matrix: [x_error]
+    truth_z: [goodness]
+
+sweep:
+  axes:
+    - path: data.noise_std
+      values: [0.0, 0.0001, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0]
+
+plot:
+  enabled: true
+  dir: ../../plots/figure_01_sigmoid_noise
+  name: figure_01_sigmoid_noise
+  legend_key: data.noise_std
+  legend_title: "Noise std"
+  max_plots_per_row: 2
+  show_legend: true
+  plot1:
+    type: summary_line
+    x: data.noise_std
+    y: goodness
+    summary_stat: final
+    normalize_by_baseline: true
+    baseline_value: 0.0
+    x_scale: log
+    y_scale: log
+    title: "Normalized final factor error"
+    xlabel: Noise std
+    ylabel: Error relative to noiseless run
+    pdf: figure_01_sigmoid_noise
+  plot2:
+    type: line
+    x: iteration
+    y: goodness
+    y_scale: log
+    title: "Factor error by noise level"
+    xlabel: Iteration
+    ylabel: Procrustes error
+    pdf: figure_01_sigmoid_noise

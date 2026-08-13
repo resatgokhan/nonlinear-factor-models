@@ -1,0 +1,141 @@
+# Figure 2 parameter study from arXiv:2605.26271.
+#
+# Uses the reported n=T=100, rank=3, M=5000, lambda=0.5, Z step zeta=1e-5,
+# phi step eta=1e-4, alpha=1e-3, noise levels, and 20,000-iteration horizon.
+# The archived runner generated a random strictly monotone degree-four
+# polynomial and fitted it in a Gaussian RKHS. This config uses the canonical
+# equivalent below. The publication reports lambda=0.5 while the archived YAML
+# records 0.0; this config follows the publication pending a provenance decision.
+# Expected workload: a long research run.
+schema_version: 2
+experiment: figure_02_joint_recovery_noise
+
+algorithm:
+  name: bcd
+  params:
+    regularization:
+      lambda_: 0.5
+      mu: 1.0
+      alpha: 1.0e-3
+    z_optimizer:
+      name: gradient_descent
+      params:
+        learning_rate: 1.0e-5
+    phi_update:
+      learning_rate: 1.0e-4
+    project_z: false
+    freeze_phi_updates: false
+
+trials: 1
+seed: 2026
+
+data:
+  source: synthetic
+  type: standard_normal
+  desirable: false
+  noise_std: 0.0
+  generating_link:
+    name: random_monotone_rkhs
+    params:
+      degree: 4
+      sigma: 1.0
+      fit_ridge: 1.0e-6
+  evaluation_domain:
+    central_mass: 0.95
+    grid_count: 1000
+  bounds:
+    lower: -3.0
+    upper: 3.0
+  shape:
+    n_rows: 100
+    n_cols: 100
+    rank: 3
+    n_observations: 5000
+
+link:
+  kind: piecewise_linear_rkhs
+  sigma: 1.0
+  params:
+    grid:
+      count: 1000
+      bounds:
+        name: fixed
+        params:
+          lower: -3.0
+          upper: 3.0
+      rebuild:
+        name: never
+        params: {}
+
+objective:
+  name: squared_error
+  params: {}
+
+initialization:
+  mode: separate
+  z:
+    name: svd
+    params: {}
+  phi:
+    name: zero
+    params: {}
+
+runtime:
+  max_iter: 20000
+  tol: 0.0
+  dtype: float64
+  diagnostics_interval: 200
+  save_checkpoints: false
+  checkpoint_iters: []
+
+diagnostics:
+  on_error: raise
+  families:
+    objective: [loss]
+    timing: [elapsed]
+    reconstruction: [rmse]
+    truth_matrix: [x_error, phi_x_error]
+    truth_z: [goodness]
+    phi: [phi_diff]
+    phi_sharp: [regret, phi_sharp_diff, phi_sharp_diff_star, lyapunov]
+
+sweep:
+  axes:
+    - path: data.noise_std
+      values: [0.0, 0.01, 0.05, 0.1, 0.25, 0.5, 1.0]
+
+plot:
+  enabled: true
+  dir: ../../plots/figure_02_joint_recovery_noise
+  name: figure_02_joint_recovery_noise
+  legend_key: data.noise_std
+  legend_title: "Noise std"
+  max_plots_per_row: 3
+  show_legend: true
+  plot1:
+    type: line
+    x: iteration
+    y: goodness
+    y_scale: log
+    title: "Factor error by noise level"
+    xlabel: Iteration
+    ylabel: Procrustes error
+    pdf: figure_02_joint_recovery_noise
+  plot2:
+    type: line
+    x: iteration
+    y: phi_diff
+    y_scale: log
+    title: "Link-function estimation error"
+    xlabel: Iteration
+    ylabel: Link-function error
+    pdf: figure_02_joint_recovery_noise
+  plot3:
+    type: line
+    x: iteration
+    y: lyapunov
+    y_scale: log
+    title: "Lyapunov potential by noise level"
+    xlabel: Iteration
+    ylabel: Lyapunov potential
+    pdf: figure_02_joint_recovery_noise

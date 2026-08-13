@@ -1,0 +1,127 @@
+# Full Jester Dataset 1 part 1 learned-link run corresponding to the nonlinear
+# monotone empirical method. Prepare the exact spreadsheet with:
+#   bcd-lab preprocess jester-dataset-1
+# The publication reports beta=3.537; this explicit projection radius is used
+# here. The archived run inferred a different radius, recorded in configs/README.
+# Expected workload: a long real-data run.
+schema_version: 2
+experiment: jester_learned_link
+
+algorithm:
+  name: bcd
+  params:
+    regularization:
+      lambda_: 0.0
+      mu: 3.537
+      alpha: 1.0e-3
+    z_optimizer:
+      name: gradient_descent
+      params:
+        learning_rate: 8.0e-8
+    phi_update:
+      learning_rate: 2.0e-8
+    project_z: true
+    freeze_phi_updates: false
+
+trials: 1
+seed: 0
+
+data:
+  source: csv
+  path: ../../data/jester-dataset-1.csv
+  row_col: row
+  col_col: col
+  value_col: value
+  has_header: true
+  remap_ids: true
+  shape:
+    rank: 5
+  split:
+    validation_fraction: 0.1
+    stratify_by: row
+
+link:
+  kind: piecewise_linear_rkhs
+  sigma: 1.0
+  params:
+    grid:
+      count: 50
+      bounds:
+        name: input_quantiles
+        params:
+          lower_quantile: 0.01
+          upper_quantile: 0.99
+          pad_fraction: 0.25
+          min_padding: 0.5
+      rebuild:
+        name: never
+        params: {}
+    monotone_phi_enabled: true
+    monotone_phi_direction: increasing
+    phi_output_clamp_enabled: true
+    phi_output_clamp_min: -10.0
+    phi_output_clamp_max: 10.0
+
+objective:
+  name: squared_error
+  params: {}
+
+initialization:
+  mode: separate
+  z:
+    name: svd
+    params: {}
+  phi:
+    name: zero
+    params: {}
+
+runtime:
+  max_iter: 2000
+  tol: 0.0
+  dtype: float64
+  diagnostics_interval: 25
+  save_checkpoints: false
+  checkpoint_iters: []
+
+diagnostics:
+  on_error: raise
+  families:
+    objective: [loss]
+    timing: [elapsed]
+    gradients: [z_grad_norm, z_optimizer_update_norm, phi_grad_norm]
+    reconstruction: [rmse, mae]
+
+selection:
+  metric: validation_rmse
+  mode: min
+  retain_checkpoint: true
+
+plot:
+  enabled: true
+  dir: ../../plots/jester_learned_link
+  name: jester_learned_link
+  max_plots_per_row: 2
+  show_legend: false
+  plot1:
+    type: line
+    x: iteration
+    y: validation_rmse
+    title: "Validation reconstruction"
+    xlabel: Iteration
+    ylabel: Validation RMSE
+    pdf: jester_learned_link
+  plot2:
+    type: line
+    x: iteration
+    y: train_rmse
+    title: "Training reconstruction"
+    xlabel: Iteration
+    ylabel: Train RMSE
+    pdf: jester_learned_link
+  plot3:
+    type: selected_link
+    show_identity: true
+    title: "Validation-selected link"
+    xlabel: Latent inner product
+    ylabel: Predicted rating
+    pdf: jester_learned_link

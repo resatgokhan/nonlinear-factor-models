@@ -1,0 +1,14 @@
+source: synthetic
+type: standard_normal
+shape:
+  n_rows: 50
+  n_cols: 50
+  rank: 3
+  n_observations: 1000
+bounds:
+  lower: -3.0
+  upper: 3.0
+noise_std: 0.1
+generating_link:
+  name: identity
+  params: {}

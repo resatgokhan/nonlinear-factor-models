@@ -1,0 +1,4 @@
+mode: joint
+joint:
+  name: svd_with_zero_phi
+  params: {}

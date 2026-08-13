@@ -1,0 +1,124 @@
+# Learned-link synthetic recovery with known matrix and factor truth.
+# Expected workload: under a minute on a typical laptop.
+schema_version: 2
+experiment: synthetic_link_recovery
+
+algorithm:
+  name: bcd
+  params:
+    regularization:
+      lambda_: 0.0
+      mu: 1.0
+      alpha: 1.0e-4
+    z_optimizer:
+      name: gradient_descent
+      params:
+        learning_rate: 5.0e-4
+    phi_update:
+      learning_rate: 1.0e-5
+    project_z: false
+
+trials: 1
+seed: 19
+
+data:
+  source: synthetic
+  type: standard_normal
+  desirable: true
+  condition_number: 3.0
+  noise_std: 0.01
+  generating_link:
+    name: identity
+    params: {}
+  bounds:
+    lower: -3.0
+    upper: 3.0
+  shape:
+    n_rows: 80
+    n_cols: 60
+    rank: 3
+    n_observations: 1600
+
+link:
+  kind: piecewise_linear_rkhs
+  sigma: 1.0
+  params:
+    grid:
+      count: 200
+      bounds:
+        name: input_quantiles
+        params:
+          lower_quantile: 0.0
+          upper_quantile: 1.0
+          pad_fraction: 0.25
+          min_padding: 1.0e-3
+      rebuild:
+        name: adaptive
+        params: {}
+    monotone_phi_enabled: true
+    monotone_phi_direction: increasing
+
+objective:
+  name: squared_error
+  params: {}
+
+initialization:
+  mode: separate
+  z:
+    name: svd
+    params: {}
+  phi:
+    name: identity_phi
+    params: {}
+
+runtime:
+  max_iter: 200
+  tol: 1.0e-8
+  dtype: float64
+  diagnostics_interval: 10
+  save_checkpoints: false
+  checkpoint_iters: []
+
+diagnostics:
+  on_error: raise
+  families:
+    objective: [loss]
+    timing: [elapsed]
+    gradients: [z_grad_norm, z_optimizer_update_norm, phi_grad_norm]
+    reconstruction: [rmse]
+    truth_matrix: [x_error]
+    truth_z: [goodness]
+
+plot:
+  enabled: true
+  dir: ../../plots/synthetic_link_recovery
+  name: synthetic_link_recovery
+  max_plots_per_row: 3
+  show_legend: false
+  plot1:
+    type: line
+    x: iteration
+    y: loss
+    y_scale: log
+    title: "Objective"
+    xlabel: Iteration
+    ylabel: Loss
+    pdf: synthetic_link_recovery
+  plot2:
+    type: line
+    x: iteration
+    y: x_error
+    y_scale: log
+    title: "Matrix recovery"
+    xlabel: Iteration
+    ylabel: Relative Frobenius error
+    pdf: synthetic_link_recovery
+  plot3:
+    type: line
+    x: iteration
+    y: train_rmse
+    y_scale: log
+    title: "Observed-entry fit"
+    xlabel: Iteration
+    ylabel: Train RMSE
+    pdf: synthetic_link_recovery

@@ -1,0 +1,6 @@
+on_error: raise
+families:
+  objective: [loss]
+  timing: [elapsed]
+  gradients: [z_grad_norm, z_optimizer_update_norm, phi_grad_norm]
+  reconstruction: null

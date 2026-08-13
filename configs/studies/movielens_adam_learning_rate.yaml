@@ -1,0 +1,139 @@
+# Adam comparison for the public MovieLens 100K subset. Prepare data with:
+#   bcd-lab preprocess ml-100k
+# This is an experimental sweep; the gradient-descent baseline remains in
+# studies/movielens_optimizer_comparison.yaml.
+schema_version: 2
+experiment: movielens_adam_learning_rate
+
+algorithm:
+  name: bcd
+  params:
+    regularization:
+      alpha: 0.0
+      lambda_: 0.0
+      mu: 0.6
+    z_optimizer:
+      name: adam
+      params:
+        learning_rate: 1.0e-3
+        beta1: 0.9
+        beta2: 0.999
+        epsilon: 1.0e-8
+    phi_update:
+      learning_rate: 1.0e-6
+    project_z: true
+
+trials: 1
+seed: 100
+
+data:
+  source: csv
+  path: ../../data/ml-100k.csv
+  row_col: row
+  col_col: col
+  value_col: value
+  has_header: true
+  remap_ids: true
+  shape:
+    rank: 10
+  size:
+    max_rows: 500
+    max_cols: 500
+    strategy: top
+  split:
+    validation_fraction: 0.1
+    stratify_by: row
+
+link:
+  kind: piecewise_linear_rkhs
+  sigma: 1.0
+  params:
+    grid:
+      count: 50
+      bounds:
+        name: input_quantiles
+        params:
+          lower_quantile: 0.01
+          upper_quantile: 0.99
+          pad_fraction: 0.25
+          min_padding: 0.5
+      rebuild:
+        name: never
+        params: {}
+    monotone_phi_enabled: true
+    monotone_phi_direction: increasing
+
+objective:
+  name: squared_error
+  params: {}
+
+initialization:
+  mode: separate
+  z:
+    name: svd
+    params: {}
+  phi:
+    name: identity_phi
+    params: {}
+
+runtime:
+  max_iter: 40
+  tol: 1.0e-6
+  dtype: float64
+  diagnostics_interval: 5
+  save_checkpoints: false
+  checkpoint_iters: []
+
+diagnostics:
+  on_error: raise
+  families:
+    objective: [loss]
+    timing: [elapsed]
+    gradients: [z_grad_norm, z_optimizer_update_norm, phi_grad_norm]
+    reconstruction: [rmse, mae]
+
+selection:
+  metric: validation_rmse
+  mode: min
+  retain_checkpoint: true
+
+sweep:
+  axes:
+    - path: algorithm.params.z_optimizer.params.learning_rate
+      values: [1.0e-4, 3.0e-4, 1.0e-3, 3.0e-3]
+
+plot:
+  enabled: true
+  dir: ../../plots/movielens_adam_learning_rate
+  name: movielens_adam_learning_rate
+  legend_key: algorithm.params.z_optimizer.params.learning_rate
+  legend_title: "Adam learning rate"
+  max_plots_per_row: 3
+  show_legend: true
+  plot1:
+    type: line
+    x: iteration
+    y: loss
+    y_scale: log
+    title: "Training objective"
+    xlabel: Iteration
+    ylabel: Loss
+    pdf: movielens_adam_learning_rate
+  plot2:
+    type: line
+    x: iteration
+    y: train_rmse
+    y_scale: log
+    title: "Training reconstruction"
+    xlabel: Iteration
+    ylabel: Train RMSE
+    pdf: movielens_adam_learning_rate
+  plot3:
+    type: line
+    x: iteration
+    y: validation_rmse
+    y_scale: log
+    title: "Validation reconstruction"
+    xlabel: Iteration
+    ylabel: Validation RMSE
+    pdf: movielens_adam_learning_rate

@@ -1,0 +1,118 @@
+# Reproducible comparison of BCD factor step sizes across repeated trials.
+# Expected workload: seconds to tens of seconds on a laptop.
+schema_version: 2
+experiment: z_learning_rate
+
+algorithm:
+  name: bcd
+  params:
+    regularization:
+      lambda_: 0.0
+      mu: 1.0
+      alpha: 0.0
+    z_optimizer:
+      name: gradient_descent
+      params:
+        learning_rate: 0.005
+    phi_update:
+      learning_rate: 0.0
+    project_z: false
+
+trials: 3
+seed: 42
+
+data:
+  source: synthetic
+  type: standard_normal
+  desirable: true
+  condition_number: 2.0
+  noise_std: 0.02
+  generating_link:
+    name: identity
+    params: {}
+  bounds:
+    lower: -3.0
+    upper: 3.0
+  shape:
+    n_rows: 40
+    n_cols: 40
+    rank: 3
+    n_observations: 500
+
+link:
+  kind: identity
+  sigma: 1.0
+  params: {}
+
+objective:
+  name: squared_error
+  params: {}
+
+initialization:
+  mode: separate
+  z:
+    name: svd
+    params: {}
+  phi:
+    name: none
+    params: {}
+
+runtime:
+  max_iter: 100
+  tol: 1.0e-8
+  dtype: float64
+  diagnostics_interval: 5
+  save_checkpoints: false
+  checkpoint_iters: []
+
+diagnostics:
+  on_error: raise
+  families:
+    objective: [loss]
+    reconstruction: [rmse]
+    truth_matrix: [x_error]
+
+sweep:
+  axes:
+    - path: algorithm.params.z_optimizer.params.learning_rate
+      values: [0.002, 0.005, 0.01]
+
+plot:
+  enabled: true
+  dir: ../../plots/z_learning_rate
+  name: z_learning_rate
+  legend_key: algorithm.params.z_optimizer.params.learning_rate
+  legend_title: "Z learning rate"
+  max_plots_per_row: 3
+  show_legend: true
+  trial_stat: mean
+  trial_error: std
+  trial_grid: linear
+  trial_grid_count: 21
+  plot1:
+    type: line
+    x: iteration
+    y: loss
+    y_scale: log
+    title: "Objective by step size"
+    xlabel: Iteration
+    ylabel: Mean loss
+    pdf: z_learning_rate
+  plot2:
+    type: line
+    x: iteration
+    y: x_error
+    y_scale: log
+    title: "Recovery by step size"
+    xlabel: Iteration
+    ylabel: Mean relative error
+    pdf: z_learning_rate
+  plot3:
+    type: line
+    x: iteration
+    y: train_rmse
+    y_scale: log
+    title: "Fit by step size"
+    xlabel: Iteration
+    ylabel: Mean train RMSE
+    pdf: z_learning_rate
