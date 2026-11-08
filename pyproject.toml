@@ -104,6 +104,7 @@ files = [
   "src/bcd_lab/plotting",
   "src/bcd_lab/data",
   "src/bcd_lab/diagnostics",
+  "src/bcd_lab/finance",
 ]
 follow_imports = "skip"
 check_untyped_defs = true
@@ -119,4 +120,8 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["pandas", "pandas.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "sklearn.covariance"
 ignore_missing_imports = true

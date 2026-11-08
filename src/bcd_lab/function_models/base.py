@@ -66,6 +66,13 @@ class TrainableFunction(DifferentiableFunction, Protocol):
 
 
 @runtime_checkable
+class UpdatePreparedFunction(Protocol):
+    """Optional preparation of model coordinates before update residuals are evaluated."""
+
+    def prepare_update(self, inputs: np.ndarray) -> None: ...
+
+
+@runtime_checkable
 class ProjectableFunction(Protocol):
     """A mutable function whose configured constraints can be applied in place."""
 

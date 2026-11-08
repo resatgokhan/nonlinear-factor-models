@@ -1,0 +1,119 @@
+schema_version: 1
+name: log_panel_N50
+panel:
+  path: ../../data/finance/log_returns_N=50.csv
+  sha256: f955d69debce3aa99add823281d81e8ad28928478dd5ada09dd79f22a3204497
+  n_assets: 50
+window:
+  start_date: '2015-01-01'
+  end_date: '2025-01-01'
+  lookback: 250
+  rebalance: 21
+  horizon: 21
+  periods: 107
+evaluation:
+  trading_days: 250
+  risk_free: 0.04
+  return_convention: weighted_log
+model_defaults:
+  rank: 15
+  seed: 0
+  algorithm:
+    name: bcd
+    params:
+      z_optimizer:
+        name: gradient_descent
+        params:
+          learning_rate: 8.0e-05
+      phi_update:
+        learning_rate: 3.0e-05
+      regularization:
+        lambda_: 0.0
+        mu: empirical
+        alpha: 0.001
+      project_z: true
+      freeze_phi_updates: false
+  link:
+    kind: piecewise_linear_rkhs
+    sigma: 1.0
+    params:
+      grid:
+        count: 40
+        bounds:
+          name: input_quantiles
+          params:
+            lower_quantile: 0.01
+            upper_quantile: 0.99
+            pad_fraction: 0.25
+            min_padding: 0.5
+        rebuild:
+          name: every_iteration
+          params: {}
+      monotone_phi_enabled: false
+      phi_output_clamp_enabled: false
+      ball_enabled: false
+  initialization:
+    z:
+      name: svd
+      params: {}
+    phi:
+      name: zero
+      params: {}
+  runtime:
+    max_iter: 500
+    tol: 0.0
+    dtype: float64
+    diagnostics_interval: 25
+    checkpoint_iters: []
+methods:
+  equally_weighted:
+    estimator:
+      name: sample
+      params:
+        ridge: 1.0e-06
+        final_floor: 1.0e-10
+    portfolio: equal_weight
+  sample:
+    estimator:
+      name: sample
+      params:
+        ridge: 1.0e-06
+        final_floor: 1.0e-10
+  linear_shrinkage:
+    estimator:
+      name: linear_shrinkage
+      params:
+        final_floor: 1.0e-10
+  bcd_identity:
+    model:
+      link:
+        kind: identity
+        sigma: 1.0
+        params: {}
+      initialization:
+        phi:
+          name: none
+          params: {}
+      algorithm:
+        params:
+          freeze_phi_updates: true
+          phi_update:
+            learning_rate: 0.0
+    estimator:
+      name: fitted_residual
+      params:
+        c_star: 1.0
+        beta: 2.0
+        d: 3.0
+        eps: 1.0e-08
+        final_floor: 1.0e-10
+  bcd_nonlinear:
+    model: {}
+    estimator:
+      name: fitted_residual
+      params:
+        c_star: 1.0
+        beta: 2.0
+        d: 3.0
+        eps: 1.0e-08
+        final_floor: 1.0e-10

@@ -346,6 +346,10 @@ class PiecewiseLinearRKHS:
     def scale_parameters(self, scale: float) -> None:
         self.scale_coefs(scale)
 
+    def prepare_update(self, inputs: np.ndarray) -> None:
+        """Regrid before the solver evaluates residuals on the current coordinates."""
+        self.prepare_grid(inputs)
+
     def gradient(
         self,
         *,
@@ -558,6 +562,12 @@ class PiecewiseLinearRKHS:
 
         lower, upper = _padded_grid_bounds(lo, hi, bounds_policy)
         new_grid = np.linspace(lower, upper, cfg.count, dtype=target_dtype)
+
+        # The solver prepares before residual evaluation; gradient() also supports
+        # standalone calls. Avoid applying interpolation twice to the same grid.
+        if self.scalars is not None and np.array_equal(self.scalars, new_grid):
+            self._resolved_input_bounds = (lo, hi)
+            return
 
         if self.scalars is None or self.coefs is None:
             new_values = np.zeros_like(new_grid, dtype=target_dtype)

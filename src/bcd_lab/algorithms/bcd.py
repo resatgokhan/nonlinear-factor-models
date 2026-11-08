@@ -24,6 +24,7 @@ from bcd_lab.function_models import (
     ScalarFunction,
     SerializableFunctionModel,
     TrainableFunction,
+    UpdatePreparedFunction,
 )
 from bcd_lab.function_models.checkpoints import (
     restore_function_model,
@@ -122,6 +123,8 @@ def _update_phi(
         centers = compute_centers(state.z, state.rows, state.cols, context.config.shape.n_rows)
         state.centers = centers
 
+    if isinstance(phi, UpdatePreparedFunction):
+        phi.prepare_update(centers)
     predictions = phi.eval_array(centers)
     require_finite(predictions, "link predictions", iteration)
     descent_direction = -context.objective.prediction_gradient(

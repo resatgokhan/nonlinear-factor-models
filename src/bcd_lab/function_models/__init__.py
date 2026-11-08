@@ -12,6 +12,7 @@ from .base import (
     ScalarFunction,
     SerializableFunctionModel,
     TrainableFunction,
+    UpdatePreparedFunction,
 )
 from .binned_piecewise_linear_rkhs import (
     BinnedPiecewiseLinearRKHS,
@@ -85,6 +86,7 @@ __all__ = [
     "SigmoidFunction",
     "TanhFunction",
     "TrainableFunction",
+    "UpdatePreparedFunction",
     "get_function_model_builder",
     "list_function_models",
     "l2_grid_diff",
